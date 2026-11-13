@@ -1,0 +1,33 @@
+name: release
+# Push a tag like v1.0.0 and GitHub builds the Mac and Windows apps and attaches them to a release.
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            asset: COPGuard-macOS.zip
+          - os: windows-latest
+            asset: COPGuard-Windows.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pyinstaller
+      - run: pyinstaller --noconfirm copguard.spec
+      - name: Zip (macOS)
+        if: runner.os == 'macOS'
+        run: cd dist && ditto -c -k --keepParent "COPGuard.app" "../${{ matrix.asset }}"
+      - name: Zip (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path "dist/COPGuard" -DestinationPath "${{ matrix.asset }}"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.asset }}

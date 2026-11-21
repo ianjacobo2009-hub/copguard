@@ -20,7 +20,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements.txt pyinstaller
+      # Qt 6.9 still runs on macOS 12; newer PySide6 builds need macOS 13 or 14
+      - run: pip install -r requirements.txt "PySide6==6.9.3" pyinstaller
       - run: pyinstaller --noconfirm copguard.spec
       - name: Zip (macOS)
         if: runner.os == 'macOS'
